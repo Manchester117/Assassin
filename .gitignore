@@ -11,6 +11,5 @@ junit*.properties
 IgnoreLexer.java~
 .gradle
 src/test/
-case/
 report/
 target/

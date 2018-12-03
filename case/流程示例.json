@@ -1,0 +1,110 @@
+{
+  "businessName": "流程示例",
+  "testStep": [
+    {
+      "stepName": "用户登录",
+      "requestData": {
+        "url": "http://c.xxxx.cn/Users/CLogin",
+        "protocol": "http",
+        "method": "post",
+        "cookies": {
+          "htk": "htk=xxxx"
+        },
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "getParams": null,
+        "postParams": [
+          {
+            "IsValidate": ""
+          },
+          {
+            "FromEmail": ""
+          },
+          {
+            "FromURL": ""
+          }
+        ],
+        "jsonParams": null
+      },
+      "correlationParams": [
+        {
+          "corrField": "",
+          "corrPattern": "",
+          "corrExpression": "",
+          "corrIndex": "",
+          "isUseForFetchDB": ""
+        }
+      ],
+      "verifyList": [
+        {
+          "verifyField": "验证跳转路径",
+          "pattern": "regex",
+          "expression": "<a href=\"(.*?)\">",
+          "index": "1",
+          "expectValue": "/PersonalCenter/Index"
+        },
+        {
+          "verifyField": "验证重定向title",
+          "pattern": "regex",
+          "expression": "<title>(.*?)</title>",
+          "index": "1",
+          "expectValue": "Object moved"
+        }
+      ],
+      "fetchDB": [
+        {
+          "sql": "SELECT TOP 10 * FROM [XXXX].[dbo].[XXXX]",
+          "columnList": [
+            "EmailAddress",
+            "SeekerUserID",
+            "EmailType",
+            "EmailStatus"
+          ]
+        }
+      ]
+    },
+    {
+      "stepName": "用户页面重定向",
+      "requestData": {
+        "url": "http://c.xxxx.cn/PersonalCenter/Index",
+        "protocol": "http",
+        "method": "get",
+        "cookies": {
+          "htk": "htk=xxxx"
+        },
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko"
+        },
+        "getParams": null,
+        "postParams": null,
+        "jsonParams": null
+      },
+      "correlationParams": [
+        {
+          "corrField": "",
+          "corrPattern": "",
+          "corrExpression": "",
+          "corrIndex": "",
+          "isUseForFetchDB": ""
+        }
+      ],
+      "verifyList": [
+        {
+          "verifyField": "验证重定向地址",
+          "pattern": "regex",
+          "expression": "<a href=\"(.*?)\">here</a>",
+          "index": "1",
+          "expectValue": "/xxxx/xxxx"
+        }
+      ],
+      "fetchDB": [
+        {
+          "sql": "",
+          "columnList": []
+        }
+      ]
+    }
+  ]
+}
