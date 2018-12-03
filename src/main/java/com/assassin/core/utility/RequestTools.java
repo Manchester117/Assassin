@@ -1,13 +1,14 @@
-package com.highpin.core.utitlity;
+package com.assassin.core.utility;
 
-import com.highpin.core.RequestComponent;
-import com.highpin.core.entity.TestStepResponseEntity;
-import com.highpin.core.entity.TestStepDataEntity;
+import com.assassin.core.RequestComponent;
+import com.assassin.core.entity.TestStepResponseEntity;
+import com.assassin.core.entity.TestStepDataEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by Peng.Zhao on 2017/7/26.
@@ -32,12 +33,16 @@ public class RequestTools {
     public static TestStepResponseEntity selectContentTypeForHttpRequest(RequestComponent reqComponent, CloseableHttpClient httpClient, TestStepDataEntity tsDataEntity) {
         TestStepResponseEntity responseEntity = null;
         Map<String, String> headersMap = tsDataEntity.getHeadersMap();
-        if (headersMap.get("Content-Type").equals("application/x-www-form-urlencoded")) {
+
+        String contentTypeVal = headersMap.get("Content-Type");
+        if (Objects.equals(contentTypeVal, "application/x-www-form-urlencoded")) {
             responseEntity = reqComponent.postFunction(tsDataEntity, httpClient);
-        } else if (headersMap.get("Content-Type").equals("application/json")){
+        } else if (Objects.equals(contentTypeVal, "application/json")){
             responseEntity = reqComponent.jsonFunction(tsDataEntity, httpClient);
-        } else if (headersMap.get("Content-Type").equals("multipart/form-data")) {
+        } else if (Objects.equals(contentTypeVal, "multipart/form-data")) {
             responseEntity = reqComponent.uploadFunction(tsDataEntity, httpClient);
+        } else {
+            responseEntity = reqComponent.postFunction(tsDataEntity, httpClient);
         }
         return responseEntity;
     }

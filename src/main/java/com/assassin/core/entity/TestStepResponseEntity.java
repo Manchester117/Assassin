@@ -1,4 +1,4 @@
-package com.highpin.core.entity;
+package com.assassin.core.entity;
 
 
 /**
@@ -6,19 +6,19 @@ package com.highpin.core.entity;
  * @description 响应实体
  */
 public class TestStepResponseEntity {
-    private String httpStepName;                // 步骤名称
+    private String stepName;                    // 步骤名称
+    private String stepUrl;                     // 请求地址
     private int httpStatusCode;                 // 响应状态码
-    private String httpUrl;                     // 请求地址
     private String httpResponseContentType;     // 响应类型
     private String httpResponseContent;         // 响应正文
-    private String httpResponseTime;            // 响应时间
+    private long httpResponseTime;              // 响应时间
 
-    public String getHttpStepName() {
-        return httpStepName;
+    public String getStepName() {
+        return stepName;
     }
 
-    public void setHttpStepName(String httpStepName) {
-        this.httpStepName = httpStepName;
+    public void setStepName(String stepName) {
+        this.stepName = stepName;
     }
 
     public int getHttpStatusCode() {
@@ -29,12 +29,12 @@ public class TestStepResponseEntity {
         this.httpStatusCode = httpStatusCode;
     }
 
-    public String getHttpUrl() {
-        return httpUrl;
+    public String getStepUrl() {
+        return stepUrl;
     }
 
-    public void setHttpUrl(String httpUrl) {
-        this.httpUrl = httpUrl;
+    public void setStepUrl(String stepUrl) {
+        this.stepUrl = stepUrl;
     }
 
     public String getHttpResponseContentType() {
@@ -53,23 +53,23 @@ public class TestStepResponseEntity {
         this.httpResponseContent = httpResponseContent;
     }
 
-    public String getHttpResponseTime() {
+    public long getHttpResponseTime() {
         return httpResponseTime;
     }
 
-    public void setHttpResponseTime(String httpResponseTime) {
+    public void setHttpResponseTime(long httpResponseTime) {
         this.httpResponseTime = httpResponseTime;
     }
 
     @Override
     public String toString() {
         return "TestStepResponseEntity{" +
-                "httpStepName='" + httpStepName + '\'' +
+                "stepName='" + stepName + '\'' +
+                ", stepUrl='" + stepUrl + '\'' +
                 ", httpStatusCode=" + httpStatusCode +
-                ", httpUrl='" + httpUrl + '\'' +
                 ", httpResponseContentType='" + httpResponseContentType + '\'' +
                 ", httpResponseContent='" + httpResponseContent + '\'' +
-                ", httpResponseTime='" + httpResponseTime + '\'' +
+                ", httpResponseTime=" + httpResponseTime +
                 '}';
     }
 }

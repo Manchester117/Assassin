@@ -1,8 +1,9 @@
-package com.highpin.core.entity;
+package com.assassin.core.entity;
 
-import java.util.HashMap;
+import com.assassin.core.entity.correlate.CorrelateEntity;
+
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Peng.Zhao on 2017/7/24.
@@ -12,11 +13,11 @@ public class TestCaseDataEntity {
     private String businessName;
     private List<TestStepDataEntity> testStepDataEntityList;
     private int stepLength;
-    private Map<String, String> correlationParamKeyValue;     // 用例关联上下文
+    private List<CorrelateEntity> correlateEntityList;      // 用例关联上下文
 
     public TestCaseDataEntity() {
         // 通过构造方法初始化关联上下文
-        this.correlationParamKeyValue = new HashMap<>();
+        correlateEntityList = new ArrayList<>();
     }
 
     public String getBusinessName() {
@@ -43,12 +44,12 @@ public class TestCaseDataEntity {
         this.stepLength = stepLength;
     }
 
-    public Map<String, String> getCorrelationParamKeyValue() {
-        return correlationParamKeyValue;
+    public List<CorrelateEntity> getCorrelateEntityList() {
+        return correlateEntityList;
     }
 
-    public void setCorrelationParamKeyValue(Map<String, String> correlationParamKeyValue) {
-        this.correlationParamKeyValue = correlationParamKeyValue;
+    public void setCorrelateEntityList(List<CorrelateEntity> correlateEntityList) {
+        this.correlateEntityList = correlateEntityList;
     }
 
     @Override
@@ -57,7 +58,7 @@ public class TestCaseDataEntity {
                 "businessName='" + businessName + '\'' +
                 ", testStepDataEntityList=" + testStepDataEntityList +
                 ", stepLength=" + stepLength +
-                ", correlationParamKeyValue=" + correlationParamKeyValue +
+                ", correlateEntityList=" + correlateEntityList +
                 '}';
     }
 }

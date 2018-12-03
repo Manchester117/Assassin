@@ -1,4 +1,8 @@
-package com.highpin.core.entity;
+package com.assassin.core.entity;
+
+import com.assassin.core.entity.correlate.CorrelateEntity;
+import com.assassin.core.entity.sql.ExecuteSQLEntity;
+import com.assassin.core.entity.verify.DataVerifyEntity;
 
 import java.util.List;
 import java.util.Map;
@@ -9,8 +13,7 @@ import java.util.Map;
  */
 public class TestStepDataEntity {
     private String stepName;
-
-    private String url;
+    private String stepUrl;
     private String protocol;
     private String method;
     private Map<String, String> cookiesMap;
@@ -18,11 +21,10 @@ public class TestStepDataEntity {
     private List<Map<String, String>> getParamsList;
     private List<Map<String, String>> postParamsList;
     private String jsonParams;
-
-    private Map<String, String> correlationParamsMap;
-
-    private List<Map<String, String>> VerifyList;
-
+    private List<CorrelateEntity> correlateEntityList;      // 关联的上下文参数
+    private List<DataVerifyEntity> dataVerifyEntityList;    // 验证点List
+    private List<ExecuteSQLEntity> fetchSQLList;            // SQL查询检查
+//    private String isCaptureImage;                          // 是否截图
 
     public String getStepName() {
         return stepName;
@@ -32,12 +34,12 @@ public class TestStepDataEntity {
         this.stepName = stepName;
     }
 
-    public String getUrl() {
-        return url;
+    public String getStepUrl() {
+        return stepUrl;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setStepUrl(String stepUrl) {
+        this.stepUrl = stepUrl;
     }
 
     public String getProtocol() {
@@ -96,27 +98,35 @@ public class TestStepDataEntity {
         this.jsonParams = jsonParams;
     }
 
-    public Map<String, String> getCorrelationParamsMap() {
-        return correlationParamsMap;
+    public List<CorrelateEntity> getCorrelateEntityList() {
+        return correlateEntityList;
     }
 
-    public void setCorrelationParamsMap(Map<String, String> correlationParamsMap) {
-        this.correlationParamsMap = correlationParamsMap;
+    public void setCorrelateEntityList(List<CorrelateEntity> correlateEntityList) {
+        this.correlateEntityList = correlateEntityList;
     }
 
-    public List<Map<String, String>> getVerifyList() {
-        return VerifyList;
+    public List<DataVerifyEntity> getDataVerifyEntityList() {
+        return dataVerifyEntityList;
     }
 
-    public void setVerifyList(List<Map<String, String>> verifyList) {
-        VerifyList = verifyList;
+    public void setDataVerifyEntityList(List<DataVerifyEntity> dataVerifyEntityList) {
+        this.dataVerifyEntityList = dataVerifyEntityList;
+    }
+
+    public List<ExecuteSQLEntity> getFetchSQLList() {
+        return fetchSQLList;
+    }
+
+    public void setFetchSQLList(List<ExecuteSQLEntity> fetchSQLList) {
+        this.fetchSQLList = fetchSQLList;
     }
 
     @Override
     public String toString() {
         return "TestStepDataEntity{" +
                 "stepName='" + stepName + '\'' +
-                ", url='" + url + '\'' +
+                ", stepUrl='" + stepUrl + '\'' +
                 ", protocol='" + protocol + '\'' +
                 ", method='" + method + '\'' +
                 ", cookiesMap=" + cookiesMap +
@@ -124,8 +134,9 @@ public class TestStepDataEntity {
                 ", getParamsList=" + getParamsList +
                 ", postParamsList=" + postParamsList +
                 ", jsonParams='" + jsonParams + '\'' +
-                ", correlationParamsMap=" + correlationParamsMap +
-                ", VerifyList=" + VerifyList +
+                ", correlateEntityList=" + correlateEntityList +
+                ", dataVerifyEntityList=" + dataVerifyEntityList +
+                ", fetchSQLList=" + fetchSQLList +
                 '}';
     }
 }

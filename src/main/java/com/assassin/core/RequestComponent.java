@@ -1,11 +1,13 @@
-package com.highpin.core;
+package com.assassin.core;
 
-import com.highpin.core.entity.TestStepResponseEntity;
-import com.highpin.core.entity.TestStepDataEntity;
-import com.highpin.core.utitlity.RequestTools;
+import com.assassin.core.entity.TestStepResponseEntity;
+import com.assassin.core.entity.TestStepDataEntity;
+import com.assassin.core.utility.ConfigureTools;
+import com.assassin.core.utility.RequestTools;
 import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -20,6 +22,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +38,7 @@ import java.util.regex.Pattern;
  * Created by Peng.Zhao on 2017/7/10.
  */
 public class RequestComponent {
+    private static Logger logger = LogManager.getLogger(RequestComponent.class.getName());
     /**
      * @description 发送请求的路由方法,根据不同类型的请求执行请求
      * @param tsDataEntity 单个测试步骤
@@ -43,17 +48,23 @@ public class RequestComponent {
         CloseableHttpClient httpClient = null;
         TestStepResponseEntity responseEntity = null;
 
+        logger.info("****************");
+        // 禁止URL重定向
+        RequestConfig config = RequestConfig.custom().setRedirectsEnabled(false).build();
         if ("http".equals(tsDataEntity.getProtocol())){
-            // 代理方法调用,用于Fiddler截取请求,方便调试
-            httpClient = HttpClients.custom().setRoutePlanner(RequestTools.setProxy()).build();
-//            httpClient = HttpClients.createDefault();
-            if ("get".equals(tsDataEntity.getMethod())) {
+            if (ConfigureTools.isUseProxy())
+                // 判断是否使用代理
+                // 代理方法调用,用于Fiddler/Charles截取请求,方便调试
+                httpClient = HttpClients.custom().setRoutePlanner(RequestTools.setProxy()).setDefaultRequestConfig(config).build();
+            else
+                // 不使用代理时使用,禁止URL
+                httpClient = HttpClients.custom().setDefaultRequestConfig(config).build();
+            if ("get".equals(tsDataEntity.getMethod()))
                 responseEntity = this.getFunction(tsDataEntity, httpClient);
-            } else if ("post".equals(tsDataEntity.getMethod())) {
+            else if ("post".equals(tsDataEntity.getMethod()))
                 responseEntity = RequestTools.selectContentTypeForHttpRequest(this, httpClient, tsDataEntity);
-            }
         } else if ("https".equals(tsDataEntity.getProtocol())) {
-            System.out.println("使用Https, 后续实现.");
+            logger.info("使用Https, 后续实现.");
         }
 
         try {
@@ -62,6 +73,7 @@ public class RequestComponent {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        logger.info("****************");
         return responseEntity;
     }
 
@@ -83,14 +95,22 @@ public class RequestComponent {
 
         // 设置cookie
         Map<String, String> cookiesMap = tsDataEntity.getCookiesMap();
-        String cookieContent = RequestTools.setRequestCookie(cookiesMap);
-        httpGet.setHeader("Cookie", cookieContent);
+        if (cookiesMap != null) {
+            String cookieContent = RequestTools.setRequestCookie(cookiesMap);
+            httpGet.setHeader("Cookie", cookieContent);
+        }
 
         // 设置请求头
         Map<String, String> headersMap = tsDataEntity.getHeadersMap();
         if (headersMap != null) {
             for (Map.Entry<String, String> entry : headersMap.entrySet()) {
-                httpGet.setHeader(entry.getKey(), entry.getValue());
+                /*
+                    避免org.apache.http.ProtocolException: Content-Length header already present的问题
+                    因为HttpClient在Body不为空时会自动添加Content-Length.此处在添加用例中的Content-Length会导致Content-Length重复
+                    进而出现ProtocolException异常
+                */
+                if (!entry.getKey().equals("Content-Length"))
+                    httpGet.setHeader(entry.getKey(), entry.getValue());
             }
         }
         // 设置请求参数
@@ -98,9 +118,8 @@ public class RequestComponent {
         if (tsDataEntity.getGetParamsList() != null) {
             for (int i = 0; i < tsDataEntity.getGetParamsList().size(); ++i) {
                 Map<String, String> getParamsMap = tsDataEntity.getGetParamsList().get(i);
-                for (Map.Entry<String, String> entry: getParamsMap.entrySet()) {
+                for (Map.Entry<String, String> entry: getParamsMap.entrySet())
                     getParams.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
-                }
             }
         }
         String getParamsValue = null;
@@ -109,9 +128,10 @@ public class RequestComponent {
             // 对Get请求的参数进行编码,形成请求实体
             getParamsValue = EntityUtils.toString(new UrlEncodedFormEntity(getParams, Consts.UTF_8));
             // 创建Get请求
-            httpGet.setURI(URI.create(tsDataEntity.getUrl() + "?" + getParamsValue));
+            httpGet.setURI(URI.create(tsDataEntity.getStepUrl() + "?" + getParamsValue));
             // 打印URL
-            System.out.println("执行Get请求: " + httpGet.getURI());
+            logger.info("执行测试步骤: {}", tsDataEntity.getStepName());
+            logger.info("测试步骤URL: {}", httpGet.getURI());
 
             // 发送请求并计算响应时间
             startTime = System.currentTimeMillis();
@@ -120,29 +140,30 @@ public class RequestComponent {
             responseTime = endTime - startTime;
 
             // 将请求步骤名称放置到响应实体中
-            responseEntity.setHttpStepName(tsDataEntity.getStepName());
+            responseEntity.setStepName(tsDataEntity.getStepName());
             // 将请求URL放置到响应实体中
-            responseEntity.setHttpUrl(tsDataEntity.getUrl());
+            responseEntity.setStepUrl(tsDataEntity.getStepUrl());
             // 将响应时间放置到响应实体中
-            responseEntity.setHttpResponseTime("响应时间: " + responseTime + "毫秒");
+            responseEntity.setHttpResponseTime(responseTime);
             // 将响应状态码放置到响应实体中
             responseEntity.setHttpStatusCode(httpResponse.getStatusLine().getStatusCode());
             // 将响应类型放置到响应实体中
             responseEntity.setHttpResponseContentType(httpResponse.getEntity().getContentType().getValue());
             // 将响应正文放置到响应实体中
             responseEntity.setHttpResponseContent(EntityUtils.toString(httpResponse.getEntity()));
+            // 日志打印
+            logger.info("响应时间: {}毫秒", responseTime);
+            logger.info("响应状态: {}", httpResponse.getStatusLine().getStatusCode());
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             try {
-                if (httpResponse != null) {
+                if (httpResponse != null)
                     httpResponse.close();
-                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        System.out.println("响应时间: " + responseTime + "毫秒");
 
         return responseEntity;
     }
@@ -154,7 +175,7 @@ public class RequestComponent {
      * @return  响应对象
      */
     public TestStepResponseEntity postFunction(TestStepDataEntity tsDataEntity, CloseableHttpClient httpClient) {
-        HttpPost httpPost = new HttpPost(tsDataEntity.getUrl());
+        HttpPost httpPost = new HttpPost(tsDataEntity.getStepUrl());
         CloseableHttpResponse httpResponse = null;
         // 响应时间计算
         long startTime = 0L;
@@ -165,14 +186,24 @@ public class RequestComponent {
 
         // 设置cookie
         Map<String, String> cookiesMap = tsDataEntity.getCookiesMap();
-        String cookieContent = RequestTools.setRequestCookie(cookiesMap);
-        httpPost.setHeader("Cookie", cookieContent);
+        // 需要对APP没cookie的情况进行处理
+        if (cookiesMap != null) {
+            String cookieContent = RequestTools.setRequestCookie(cookiesMap);
+            httpPost.setHeader("Cookie", cookieContent);
+        }
 
         // 设置请求头
         Map<String, String> headersMap = tsDataEntity.getHeadersMap();
         if (headersMap != null) {
             for (Map.Entry<String, String> entry: headersMap.entrySet()) {
-                httpPost.setHeader(entry.getKey(), entry.getValue());
+                /*
+                    避免org.apache.http.ProtocolException: Content-Length header already present的问题
+                    因为HttpClient在Body不为空时会自动添加Content-Length.此处在添加用例中的Content-Length会导致Content-Length重复
+                    进而出现ProtocolException异常
+                */
+                if (!entry.getKey().equals("Content-Length")) {
+                    httpPost.setHeader(entry.getKey(), entry.getValue());
+                }
             }
         }
 
@@ -195,7 +226,8 @@ public class RequestComponent {
             // 将参数放置在请求中
             httpPost.setEntity(ueFormEntity);
             // 打印URL
-            System.out.println("执行Post请求: " + httpPost.getURI());
+            logger.info("执行测试步骤: {}", tsDataEntity.getStepName());
+            logger.info("测试步骤URL: {}", httpPost.getURI());
 
             // 发送请求并计算响应时间
             startTime = System.currentTimeMillis();
@@ -204,17 +236,20 @@ public class RequestComponent {
             responseTime = endTime - startTime;
 
             // 将请求步骤名称放置到响应实体中
-            responseEntity.setHttpStepName(tsDataEntity.getStepName());
+            responseEntity.setStepName(tsDataEntity.getStepName());
             // 将请求URL放置到响应实体中
-            responseEntity.setHttpUrl(tsDataEntity.getUrl());
+            responseEntity.setStepUrl(tsDataEntity.getStepUrl());
             // 将响应时间放置到响应实体中
-            responseEntity.setHttpResponseTime("响应时间: " + responseTime + "毫秒");
+            responseEntity.setHttpResponseTime(responseTime);
             // 将响应状态码放置到响应实体中
             responseEntity.setHttpStatusCode(httpResponse.getStatusLine().getStatusCode());
             // 将响应类型放置到响应实体中
             responseEntity.setHttpResponseContentType(httpResponse.getEntity().getContentType().getValue());
             // 将响应正文放置到响应实体中
             responseEntity.setHttpResponseContent(EntityUtils.toString(httpResponse.getEntity()));
+            // 日志打印
+            logger.info("响应时间: {}毫秒", responseTime);
+            logger.info("响应状态: {}", httpResponse.getStatusLine().getStatusCode());
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -226,7 +261,6 @@ public class RequestComponent {
                 e.printStackTrace();
             }
         }
-        System.out.println("响应时间: " + responseTime + "毫秒");
 
         return responseEntity;
     }
@@ -238,7 +272,7 @@ public class RequestComponent {
      * @return  响应对象
      */
     public TestStepResponseEntity jsonFunction(TestStepDataEntity tsDataEntity, CloseableHttpClient httpClient) {
-        HttpPost httpPost = new HttpPost(tsDataEntity.getUrl());
+        HttpPost httpPost = new HttpPost(tsDataEntity.getStepUrl());
         CloseableHttpResponse httpResponse = null;
         // 响应时间计算
         long startTime = 0L;
@@ -253,14 +287,24 @@ public class RequestComponent {
 
         // 设置cookie
         Map<String, String> cookiesMap = tsDataEntity.getCookiesMap();
-        String cookieContent = RequestTools.setRequestCookie(cookiesMap);
-        httpPost.setHeader("Cookie", cookieContent);
+        // 需要对APP没cookie的情况进行处理
+        if (cookiesMap != null) {
+            String cookieContent = RequestTools.setRequestCookie(cookiesMap);
+            httpPost.setHeader("Cookie", cookieContent);
+        }
 
         // 设置请求头
         Map<String, String> headersMap = tsDataEntity.getHeadersMap();
         if (headersMap != null) {
             for (Map.Entry<String, String> entry: headersMap.entrySet()) {
-                httpPost.setHeader(entry.getKey(), entry.getValue());
+                /*
+                    避免org.apache.http.ProtocolException: Content-Length header already present的问题
+                    因为HttpClient在Body不为空时会自动添加Content-Length.此处在添加用例中的Content-Length会导致Content-Length重复
+                    进而出现ProtocolException异常
+                */
+                if (!entry.getKey().equals("Content-Length")) {
+                    httpPost.setHeader(entry.getKey(), entry.getValue());
+                }
             }
         }
         // 将Json放置在请求体中
@@ -269,7 +313,8 @@ public class RequestComponent {
         // 发送带有Json的Post请求
         try {
             // 打印请求URL
-            System.out.println("执行Json请求: " + httpPost.getURI());
+            logger.info("执行测试步骤: {}", tsDataEntity.getStepName());
+            logger.info("测试步骤URL: {}", httpPost.getURI());
             // 发送请求并计算响应时间
             startTime = System.currentTimeMillis();
             httpResponse = httpClient.execute(httpPost);
@@ -277,17 +322,20 @@ public class RequestComponent {
             responseTime = endTime - startTime;
 
             // 将请求步骤名称放置到响应实体中
-            responseEntity.setHttpStepName(tsDataEntity.getStepName());
+            responseEntity.setStepName(tsDataEntity.getStepName());
             // 将请求URL放置到响应实体中
-            responseEntity.setHttpUrl(tsDataEntity.getUrl());
+            responseEntity.setStepUrl(tsDataEntity.getStepUrl());
             // 将响应时间放置到响应实体中
-            responseEntity.setHttpResponseTime("响应时间: " + responseTime + "毫秒");
+            responseEntity.setHttpResponseTime(responseTime);
             // 将响应状态码放置到响应实体中
             responseEntity.setHttpStatusCode(httpResponse.getStatusLine().getStatusCode());
             // 将响应类型放置到响应实体中
             responseEntity.setHttpResponseContentType(httpResponse.getEntity().getContentType().getValue());
             // 将响应正文放置到响应实体中
             responseEntity.setHttpResponseContent(EntityUtils.toString(httpResponse.getEntity()));
+            // 日志打印
+            logger.info("响应时间: {}毫秒", responseTime);
+            logger.info("响应状态: {}", httpResponse.getStatusLine().getStatusCode());
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -299,7 +347,6 @@ public class RequestComponent {
                 e.printStackTrace();
             }
         }
-        System.out.println("响应时间: " + responseTime + "毫秒");
 
         return responseEntity;
     }
@@ -311,7 +358,7 @@ public class RequestComponent {
      * @return  响应对象
      */
     public TestStepResponseEntity uploadFunction(TestStepDataEntity tsDataEntity, CloseableHttpClient httpClient) {
-        HttpPost httpPost = new HttpPost(tsDataEntity.getUrl());
+        HttpPost httpPost = new HttpPost(tsDataEntity.getStepUrl());
         CloseableHttpResponse httpResponse = null;
         // 响应时间计算
         long startTime = 0L;
@@ -322,14 +369,24 @@ public class RequestComponent {
 
         // 设置cookie
         Map<String, String> cookiesMap = tsDataEntity.getCookiesMap();
-        String cookieContent = RequestTools.setRequestCookie(cookiesMap);
-        httpPost.setHeader("Cookie", cookieContent);
+        // 需要对APP没cookie的情况进行处理
+        if (cookiesMap != null) {
+            String cookieContent = RequestTools.setRequestCookie(cookiesMap);
+            httpPost.setHeader("Cookie", cookieContent);
+        }
 
         // 设置请求头
         Map<String, String> headersMap = tsDataEntity.getHeadersMap();
         if (headersMap != null) {
             for (Map.Entry<String, String> entry : headersMap.entrySet()) {
-                httpPost.setHeader(entry.getKey(), entry.getValue());
+                /*
+                    避免org.apache.http.ProtocolException: Content-Length header already present的问题
+                    因为HttpClient在Body不为空时会自动添加Content-Length.此处在添加用例中的Content-Length会导致Content-Length重复
+                    进而出现ProtocolException异常
+                */
+                if (!entry.getKey().equals("Content-Length")) {
+                    httpPost.setHeader(entry.getKey(), entry.getValue());
+                }
             }
         }
 
@@ -398,25 +455,29 @@ public class RequestComponent {
             // 建立请求实体
             HttpEntity requestEntity = builder.build();
             httpPost.setEntity(requestEntity);
-            // 发送请求并计算响应时间
-            System.out.println("执行上传请求: " + httpPost.getURI());
+            // 发送请求的URL
+            logger.info("执行测试步骤: {}", tsDataEntity.getStepName());
+            logger.info("测试步骤URL: {}", httpPost.getURI());
             startTime = System.currentTimeMillis();
             httpResponse = httpClient.execute(httpPost);
             endTime = System.currentTimeMillis();
             responseTime = endTime - startTime;
 
             // 将请求步骤名称放置到响应实体中
-            responseEntity.setHttpStepName(tsDataEntity.getStepName());
+            responseEntity.setStepName(tsDataEntity.getStepName());
             // 将请求URL放置到响应实体中
-            responseEntity.setHttpUrl(tsDataEntity.getUrl());
+            responseEntity.setStepUrl(tsDataEntity.getStepUrl());
             // 将响应时间放置到响应实体中
-            responseEntity.setHttpResponseTime("响应时间: " + responseTime + "毫秒");
+            responseEntity.setHttpResponseTime(responseTime);
             // 将响应状态码放置到响应实体中
             responseEntity.setHttpStatusCode(httpResponse.getStatusLine().getStatusCode());
             // 将响应类型放置到响应实体中
             responseEntity.setHttpResponseContentType(httpResponse.getEntity().getContentType().getValue());
             // 将响应正文放置到响应实体中
             responseEntity.setHttpResponseContent(EntityUtils.toString(httpResponse.getEntity()));
+            // 日志打印
+            logger.info("响应时间: {}毫秒", responseTime);
+            logger.info("响应状态: {}", httpResponse.getStatusLine().getStatusCode());
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -428,8 +489,6 @@ public class RequestComponent {
                 e.printStackTrace();
             }
         }
-
-        System.out.println("响应时间: " + responseTime + "毫秒");
 
         return responseEntity;
     }

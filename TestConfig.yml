@@ -1,0 +1,41 @@
+environment:
+  -
+    type: develop
+    active: false
+    datasource:
+      driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      url: jdbc:sqlserver://XXX.XXX.XXX.XXX:1433;databaseName=XXXDB
+      username: dbusername
+      password: dbpassword
+  -
+    type: test
+    active: true
+    datasource:
+      driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      url: jdbc:sqlserver://XXX.XXX.XXX.XXX:1433;databaseName=XXXDB
+      username: dbusername
+      password: dbpassword
+  -
+    type: acceptance
+    active: false
+    datasource:
+      driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      url: jdbc:sqlserver://XXX.XXX.XXX.XXX:1433;databaseName=XXXDB
+      username: dbusername
+      password: dbpassword
+  -
+    type: grayscale
+    active: false
+    datasource:
+      driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      url: jdbc:sqlserver://XXX.XXX.XXX.XXX:1433;databaseName=XXXDB
+      username: dbusername
+      password: dbpassword
+proxy: true         # 是否开启截包
+caseSequence:
+  active: true      # 是否允许
+  sequence:
+    - 用例流程_1.json
+#    - 用例流程_2.json
+#    - 用例流程_3.json
+#    - 用例流程_4.json

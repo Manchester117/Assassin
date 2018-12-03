@@ -1,4 +1,4 @@
-package com.highpin.core.entity;
+package com.assassin.core.entity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,5 +30,13 @@ public class TestCaseResultEntity {
 
     public void setTsResultEntityList(List<TestStepResultEntity> tsResultEntityList) {
         this.tsResultEntityList = tsResultEntityList;
+    }
+
+    @Override
+    public String toString() {
+        return "TestCaseResultEntity{" +
+                "businessName='" + businessName + '\'' +
+                ", tsResultEntityList=" + tsResultEntityList +
+                '}';
     }
 }

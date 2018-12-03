@@ -1,4 +1,4 @@
-package com.highpin.core.entity;
+package com.assassin.core.entity;
 
 import java.util.ArrayList;
 import java.util.List;

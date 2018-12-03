@@ -1,4 +1,6 @@
-package com.highpin.core.entity.TemplateEngineEntity;
+package com.assassin.core.entity.template;
+
+import com.assassin.core.entity.sql.ExecuteSQLEntity;
 
 import java.util.List;
 
@@ -10,12 +12,14 @@ public class StepFreeMarkerResultEntity {
     private String stepName;
     private String stepUrl;
     private int httpStatusCode;
-    private String httpResponseTime;
+    private long httpResponseTime;
     private int verifyLength;
-    private List<String> resultKeyList;
+    private List<String> VerifyFieldList;
     private List<String> actualValueList;
     private List<String> expectValueList;
     private List<String> resultValueList;
+    private String imageName;
+    private List<ExecuteSQLEntity> sqlFetchEntityList;
 
     public String getStepName() {
         return stepName;
@@ -41,11 +45,11 @@ public class StepFreeMarkerResultEntity {
         this.httpStatusCode = httpStatusCode;
     }
 
-    public String getHttpResponseTime() {
+    public long getHttpResponseTime() {
         return httpResponseTime;
     }
 
-    public void setHttpResponseTime(String httpResponseTime) {
+    public void setHttpResponseTime(long httpResponseTime) {
         this.httpResponseTime = httpResponseTime;
     }
 
@@ -57,12 +61,12 @@ public class StepFreeMarkerResultEntity {
         this.verifyLength = verifyLength;
     }
 
-    public List<String> getResultKeyList() {
-        return resultKeyList;
+    public List<String> getVerifyFieldList() {
+        return VerifyFieldList;
     }
 
-    public void setResultKeyList(List<String> resultKeyList) {
-        this.resultKeyList = resultKeyList;
+    public void setVerifyFieldList(List<String> verifyFieldList) {
+        this.VerifyFieldList = verifyFieldList;
     }
 
     public List<String> getActualValueList() {
@@ -87,5 +91,38 @@ public class StepFreeMarkerResultEntity {
 
     public void setResultValueList(List<String> resultValueList) {
         this.resultValueList = resultValueList;
+    }
+
+    public String getImageName() {
+        return imageName;
+    }
+
+    public void setImageName(String imageName) {
+        this.imageName = imageName;
+    }
+
+    public List<ExecuteSQLEntity> getSqlFetchEntityList() {
+        return sqlFetchEntityList;
+    }
+
+    public void setSqlFetchEntityList(List<ExecuteSQLEntity> sqlFetchEntityList) {
+        this.sqlFetchEntityList = sqlFetchEntityList;
+    }
+
+    @Override
+    public String toString() {
+        return "StepFreeMarkerResultEntity{" +
+                "stepName='" + stepName + '\'' +
+                ", stepUrl='" + stepUrl + '\'' +
+                ", httpStatusCode=" + httpStatusCode +
+                ", httpResponseTime=" + httpResponseTime +
+                ", verifyLength=" + verifyLength +
+                ", VerifyFieldList=" + VerifyFieldList +
+                ", actualValueList=" + actualValueList +
+                ", expectValueList=" + expectValueList +
+                ", resultValueList=" + resultValueList +
+                ", imageName='" + imageName + '\'' +
+                ", sqlFetchEntityList=" + sqlFetchEntityList +
+                '}';
     }
 }

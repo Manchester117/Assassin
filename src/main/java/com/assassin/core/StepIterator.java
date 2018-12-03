@@ -1,9 +1,9 @@
-package com.highpin.core;
+package com.assassin.core;
 
-import com.highpin.core.entity.TestCaseDataEntity;
-import com.highpin.core.entity.TestCaseResponseEntity;
-import com.highpin.core.entity.TestCaseResultEntity;
-import com.highpin.core.entity.TestStepDataEntity;
+import com.assassin.core.entity.TestCaseDataEntity;
+import com.assassin.core.entity.TestCaseResponseEntity;
+import com.assassin.core.entity.TestCaseResultEntity;
+import com.assassin.core.entity.TestStepDataEntity;
 
 import java.util.List;
 
